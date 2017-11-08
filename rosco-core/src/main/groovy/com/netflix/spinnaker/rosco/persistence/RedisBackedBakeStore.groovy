@@ -23,6 +23,9 @@ import com.netflix.spinnaker.rosco.api.BakeStatus
 import com.netflix.spinnaker.rosco.jobs.BakeRecipe
 import com.netflix.spinnaker.rosco.providers.CloudProviderBakeHandler
 import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.exceptions.JedisDataException
@@ -31,6 +34,7 @@ import java.util.concurrent.TimeUnit
 
 class RedisBackedBakeStore implements BakeStore {
 
+  Logger log = LoggerFactory.getLogger(this.getClass().getName())
   public static final String INCOMPLETE_BAKES_PREFIX = "allBakes:incomplete:"
 
   @Autowired
@@ -555,14 +559,17 @@ class RedisBackedBakeStore implements BakeStore {
 
     try {
       if (!scriptSHA) {
+        log.info("null initial scriptSHA for " + scriptName + ", caching scripts")
         cacheAllScripts()
 
         scriptSHA = scriptNameToSHAMap[scriptName]
+        log.info("scriptSHA for " + scriptName + " after cache: " + scriptSHA)
       }
 
       def jedis = jedisPool.getResource()
 
       jedis.withCloseable {
+        log.info("Calling evalsha with scriptSHA: " + scriptSHA)
         return jedis.evalsha((String)scriptSHA, keyList, argList)
       }
     } catch (JedisDataException e) {
