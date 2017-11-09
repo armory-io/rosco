@@ -27,6 +27,7 @@ import groovy.util.logging.Slf4j
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.exceptions.JedisDataException
 
@@ -49,14 +50,21 @@ class RedisBackedBakeStore implements BakeStore {
     this.jedisPool = jedisPool;
   }
 
+  private String scriptLoad(Jedis jedis, String name, String script) {
+    def ret = jedis.scriptLoad(script)
+    log.info("Got SHA " + ret + " when loading " + name)
+    return ret
+
+  }
   private void cacheAllScripts() {
     def jedis = jedisPool.getResource()
+    log.info("Got jedis resource " + jedis.toString())
 
     jedis.withCloseable {
       scriptNameToSHAMap.with {
         // Expected key list: lock key, bake key
         // Expected arg list: ttlMilliseconds
-        acquireBakeLockSHA = jedis.scriptLoad("""\
+        acquireBakeLockSHA = scriptLoad(jedis, "acquireBakeLockSHA","""\
           -- Set the lock key key if it's not already set.
           if redis.call('SETNX', KEYS[1], 'locked') == 1 then
             -- Set TTL of 5 seconds.
@@ -74,7 +82,7 @@ class RedisBackedBakeStore implements BakeStore {
         """)
         // Expected key list: "allBakes", bake id, bake key, this instance incomplete bakes key, lock key
         // Expected arg list: createdTimestampMilliseconds, region, bake request json, bake status json, bake logs json, command, rosco instance id
-        storeNewBakeStatusSHA = jedis.scriptLoad("""\
+        storeNewBakeStatusSHA = scriptLoad(jedis, "storeNewBakeStatusSHA","""\
           -- Delete the bake id key.
           redis.call('DEL', KEYS[2])
 
@@ -120,7 +128,7 @@ class RedisBackedBakeStore implements BakeStore {
         """)
         // Expected key list: bake id
         // Expected arg list: bake details json
-        updateBakeDetailsSHA = jedis.scriptLoad("""\
+        updateBakeDetailsSHA = scriptLoad(jedis, "updateBakeDetailsSHA","""\
           local existing_bake_status = redis.call('HGET', KEYS[1], 'bakeStatus')
 
           -- Ensure we don't update/resurrect a canceled bake (can happen due to a race).
@@ -164,17 +172,17 @@ class RedisBackedBakeStore implements BakeStore {
                        'updatedTimestamp', ARGV[3])
           end
         """
-        updateBakeStatusSHA = jedis.scriptLoad(updateBakeStatusBaseScript)
+        updateBakeStatusSHA = scriptLoad(jedis, "updateBakeStatusSHA", updateBakeStatusBaseScript)
         // Expected key list: bake id, this instance incomplete bakes key
         // Expected arg list: bake status json, bake logs json, updatedTimestampMilliseconds
         def updateBakeStatusWithIncompleteRemovalScript = updateBakeStatusBaseScript + """\
           -- Remove bake id from set of incomplete bakes.
           redis.call('SREM', KEYS[2], KEYS[1])
         """
-        updateBakeStatusWithIncompleteRemovalSHA = jedis.scriptLoad(updateBakeStatusWithIncompleteRemovalScript)
+        updateBakeStatusWithIncompleteRemovalSHA = scriptLoad(jedis, "updateBakeStatusWithIncompleteRemovalSHA", updateBakeStatusWithIncompleteRemovalScript)
         // Expected key list: bake id
         // Expected arg list: error
-        storeBakeErrorSHA = jedis.scriptLoad("""\
+        storeBakeErrorSHA = scriptLoad(jedis, "storeBakeErrorSHA","""\
           -- Retrieve the bake key associated with bake id.
           local bake_key = redis.call('HGET', KEYS[1], 'bakeKey')
 
@@ -188,7 +196,7 @@ class RedisBackedBakeStore implements BakeStore {
         """)
         // Expected key list: bake key, "allBakes", incomplete bake keys...
         // Expected arg list:
-        deleteBakeByKeySHA = jedis.scriptLoad("""\
+        deleteBakeByKeySHA = scriptLoad(jedis, "deleteBakeByKeySHA","""\
           -- Retrieve the bake id associated with bake key.
           local bake_id = redis.call('HGET', KEYS[1], 'id')
 
@@ -215,7 +223,7 @@ class RedisBackedBakeStore implements BakeStore {
         """)
         // Expected key list: bake key, "allBakes", incomplete bake keys...
         // Expected arg list: updatedTimestampMilliseconds
-        deleteBakeByKeyPreserveDetailsSHA = jedis.scriptLoad("""\
+        deleteBakeByKeyPreserveDetailsSHA = scriptLoad(jedis, "deleteBakeByKeyPreserveDetailsSHA","""\
           -- Retrieve the bake id associated with bake key.
           local bake_id = redis.call('HGET', KEYS[1], 'id')
 
@@ -256,7 +264,7 @@ class RedisBackedBakeStore implements BakeStore {
         """)
         // Expected key list: bake id, "allBakes", incomplete bake keys...
         // Expected arg list: bake status json, updatedTimestampMilliseconds
-        cancelBakeByIdSHA = jedis.scriptLoad("""
+        cancelBakeByIdSHA = scriptLoad(jedis, "cancelBakeByIdSHA","""
           -- Retrieve the bake key associated with bake id.
           local bake_key = redis.call('HGET', KEYS[1], 'bakeKey')
 
