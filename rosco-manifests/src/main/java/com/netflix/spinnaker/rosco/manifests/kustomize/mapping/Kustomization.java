@@ -1,0 +1,70 @@
+/*
+ * Copyright 2019 Armory, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.netflix.spinnaker.rosco.manifests.kustomize.mapping;
+
+import com.fasterxml.jackson.annotation.*;
+import java.io.File;
+import java.util.*;
+import java.util.stream.Collectors;
+import lombok.Data;
+
+@Data
+public class Kustomization {
+
+  private List<String> resources = new ArrayList<>();
+
+  private List<ConfigMapGenerator> configMapGenerator = new ArrayList<>();
+
+  private List<String> crds = new ArrayList<>();
+
+  private List<String> generators = new ArrayList<>();
+
+  private List<Patch> patches = new ArrayList<>();
+
+  private List<String> patchesStrategicMerge = new ArrayList<>();
+
+  private List<PatchesJson6902> patchesJson6902 = new ArrayList<>();
+
+  private String kustomizationFilename;
+
+  @JsonIgnore private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+  public HashSet<String> getFilesToEvaluate() {
+    HashSet<String> toEvaluate = new HashSet<>();
+    if (this.resources != null) this.resources.forEach(resource -> toEvaluate.add(resource));
+    if (this.crds != null) this.crds.forEach(crd -> toEvaluate.add(crd));
+    if (this.generators != null) this.generators.forEach(gen -> toEvaluate.add(gen));
+    if (this.patches != null) this.patches.forEach(patch -> toEvaluate.add(patch.getPath()));
+    if (this.patchesStrategicMerge != null)
+      this.patchesStrategicMerge.forEach(patch -> toEvaluate.add(patch));
+    if (this.patchesJson6902 != null)
+      this.patchesJson6902.forEach(json -> toEvaluate.add(json.getPath()));
+    return toEvaluate;
+  }
+
+  public Set<String> getFilesToDownload(String artifactPath) {
+    HashSet<String> toDownload = new HashSet<>();
+    toDownload.add(artifactPath.concat(File.separator).concat(this.kustomizationFilename));
+    toDownload.addAll(
+        this.configMapGenerator.stream()
+            .map(configMapGenerator -> configMapGenerator.getFiles())
+            .flatMap(files -> files.stream())
+            .map(file -> artifactPath.concat(File.separator).concat(file))
+            .collect(Collectors.toSet()));
+    return toDownload;
+  }
+}
