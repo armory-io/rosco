@@ -1,4 +1,4 @@
-package com.netflix.spinnaker.rosco.manifests.helm;
+package com.netflix.spinnaker.rosco.manifests.kustomize;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
@@ -6,9 +6,7 @@ import com.netflix.spinnaker.rosco.api.BakeStatus;
 import com.netflix.spinnaker.rosco.jobs.BakeRecipe;
 import com.netflix.spinnaker.rosco.jobs.JobExecutor;
 import com.netflix.spinnaker.rosco.jobs.JobRequest;
-import com.netflix.spinnaker.rosco.manifests.BakeManifestRequest;
 import com.netflix.spinnaker.rosco.manifests.BakeManifestService;
-import com.netflix.spinnaker.rosco.manifests.TemplateUtils;
 import com.netflix.spinnaker.rosco.manifests.TemplateUtils.BakeManifestEnvironment;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,23 +18,23 @@ import java.util.Map;
 import java.util.UUID;
 
 @Component
-public class HelmBakeManifestService implements BakeManifestService {
+public class KustomizeBakeManifestService implements BakeManifestService {
   @Autowired
-  HelmTemplateUtils helmTemplateUtils;
+  KustomizeTemplateUtils kustomizeTemplateUtils;
 
   @Autowired
   JobExecutor jobExecutor;
 
   @Override
   public boolean handles(String type) {
-    return type.equals("helm");
+    return type.equals("kustomize");
   }
 
   public Artifact bake(Map<String, Object> request) {
     ObjectMapper mapper = new ObjectMapper();
-    HelmBakeManifestRequest bakeManifestRequest = mapper.convertValue(request, HelmBakeManifestRequest.class);
+    KustomizeBakeManifestRequest bakeManifestRequest = mapper.convertValue(request, KustomizeBakeManifestRequest.class);
     BakeManifestEnvironment env = new BakeManifestEnvironment();
-    BakeRecipe recipe = helmTemplateUtils.buildBakeRecipe(env, bakeManifestRequest);
+    BakeRecipe recipe = kustomizeTemplateUtils.buildBakeRecipe(env, bakeManifestRequest);
     BakeStatus bakeStatus;
 
     try {

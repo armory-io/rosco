@@ -20,6 +20,17 @@ RUN wget https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get &&
   ./get && \
   rm get
 
+RUN opsys=linux
+RUN curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
+  grep browser_download |\
+  grep $opsys |\
+  cut -d '"' -f 4 |\
+  xargs curl -O -L
+RUN mkdir kustomize
+RUN mv kustomize_*_${opsys}_amd64 kustomize/kustomize
+RUN chmod u+x kustomize/kustomize
+
 ENV PATH "/packer:$PATH"
+ENV PATH "kustomize:$PATH"
 
 CMD ["/opt/rosco/bin/rosco"]
