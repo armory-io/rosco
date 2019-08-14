@@ -17,7 +17,7 @@ public class BakeManifestRequest {
   Map<String, Object> overrides;
 
   public enum TemplateRenderer {
-    HELM2;
+    HELM2, KUSTOMIZE;
 
     @JsonCreator
     public TemplateRenderer fromString(String value) {
