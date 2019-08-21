@@ -14,10 +14,8 @@ import org.springframework.stereotype.Component;
 import retrofit.client.Response;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -29,6 +27,8 @@ import java.util.UUID;
 public abstract class TemplateUtils {
   @Autowired
   ClouddriverService clouddriverService;
+
+  private static final String PATH_SEPARATOR = "contents/";
 
   private RetrySupport retrySupport = new RetrySupport();
 
@@ -58,6 +58,41 @@ public abstract class TemplateUtils {
     outputStream.close();
 
     return path;
+  }
+
+  protected void downloadArtifactToTmpFileStructure(BakeManifestEnvironment env, Artifact artifact) throws IOException {
+    if (artifact.getReference() == null) {
+      throw new InvalidRequestException("Input artifact has an empty 'reference' field.");
+    }
+    Path githubPath =  Paths.get(artifact.getReference().substring(
+            artifact.getReference().indexOf(PATH_SEPARATOR)+PATH_SEPARATOR.length()));
+    String filename = githubPath.getFileName().toString();
+    String subfolder = githubPath.toString().replace(filename,"");
+
+    Path tmpPath = Paths.get(env.getStagingPath().resolve(subfolder).toString());
+    Files.createDirectories(tmpPath);
+    File newfile = new File(env.getStagingPath().resolve(subfolder).resolve(filename).toString());
+    newfile.createNewFile();
+    OutputStream outputStream = new FileOutputStream(newfile);
+
+    Response response = retrySupport.retry(() -> clouddriverService.fetchArtifact(artifact), 5, 1000, true);
+
+    if (response.getBody() != null) {
+      InputStream inputStream = response.getBody().in();
+      IOUtils.copy(inputStream, outputStream);
+      inputStream.close();
+    }
+    outputStream.close();
+  }
+
+  public String getKustomizationPath(BakeManifestEnvironment env, Artifact artifact){
+    if (artifact.getReference() == null) {
+      throw new InvalidRequestException("Input artifact has an empty 'reference' field.");
+    }
+    Path path =  Paths.get(
+            artifact.getReference().substring(
+                    artifact.getReference().indexOf(PATH_SEPARATOR)+PATH_SEPARATOR.length()));
+    return env.getStagingPath().resolve(path).toString();
   }
 
   public static class BakeManifestEnvironment {

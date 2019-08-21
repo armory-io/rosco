@@ -11,4 +11,5 @@ dependencies {
   compile spinnaker.dependency('korkWeb')
   compile spinnaker.dependency('korkArtifacts')
   compileOnly spinnaker.dependency("lombok")
+  compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.3.0'
 }
