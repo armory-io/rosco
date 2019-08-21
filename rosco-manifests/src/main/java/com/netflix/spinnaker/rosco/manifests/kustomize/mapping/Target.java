@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Netflix, Inc.
+ * Copyright 2019 Armory, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -16,63 +16,19 @@
 
 package com.netflix.spinnaker.rosco.manifests.kustomize.mapping;
 
-import com.fasterxml.jackson.annotation.*;
-
+import lombok.Data;
 import java.util.HashMap;
 import java.util.Map;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"version", "kind", "name"})
+@Data
 public class Target {
 
-  @JsonProperty("version")
   private String version;
 
-  @JsonProperty("kind")
   private String kind;
 
-  @JsonProperty("name")
   private String name;
 
-  @JsonIgnore private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+  private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-  @JsonProperty("version")
-  public String getVersion() {
-    return version;
-  }
-
-  @JsonProperty("version")
-  public void setVersion(String version) {
-    this.version = version;
-  }
-
-  @JsonProperty("kind")
-  public String getKind() {
-    return kind;
-  }
-
-  @JsonProperty("kind")
-  public void setKind(String kind) {
-    this.kind = kind;
-  }
-
-  @JsonProperty("name")
-  public String getName() {
-    return name;
-  }
-
-  @JsonProperty("name")
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  @JsonAnyGetter
-  public Map<String, Object> getAdditionalProperties() {
-    return this.additionalProperties;
-  }
-
-  @JsonAnySetter
-  public void setAdditionalProperty(String name, Object value) {
-    this.additionalProperties.put(name, value);
-  }
 }

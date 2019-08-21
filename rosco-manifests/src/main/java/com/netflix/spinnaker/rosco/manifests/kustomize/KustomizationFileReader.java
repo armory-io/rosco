@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Netflix, Inc.
+ * Copyright 2019 Armory, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import retrofit.client.Response;
-
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -63,13 +61,12 @@ public class KustomizationFileReader {
           kustomization = mapper.readValue(downloadFile(artifact), Kustomization.class);
         } catch (IOException e) {
           log.error("File does not exist in GitHub " + artifact.getReference());
-          throw new IOException("File does not exist in GitHub");
+          throw new IOException("Unable to convert kustomization file to Object.");
         }
       }
     }
     if(kustomization!=null)
       kustomization.setReference(artifact.getReference());
-
     return kustomization;
   }
 

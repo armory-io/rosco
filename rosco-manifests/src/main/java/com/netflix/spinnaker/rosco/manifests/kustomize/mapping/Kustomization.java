@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Netflix, Inc.
+ * Copyright 2019 Armory, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -17,119 +17,67 @@
 package com.netflix.spinnaker.rosco.manifests.kustomize.mapping;
 
 import com.fasterxml.jackson.annotation.*;
-
+import lombok.Data;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "resources",
-  "configMapGenerator",
-  "cdrs",
-  "generators",
-  "patches",
-  "patchesStrategicMerge",
-  "patchesJson6902"
-})
+@Data
 public class Kustomization {
 
-  @JsonProperty("resources")
   private List<String> resources = null;
 
-  @JsonProperty("configMapGenerator")
   private List<ConfigMapGenerator> configMapGenerator = null;
 
-  @JsonProperty("crds")
   private List<String> cdrs = null;
 
-  @JsonProperty("generators")
   private List<String> generators = null;
 
-  @JsonProperty("patches")
   private List<Patch> patches = null;
 
-  @JsonProperty("patchesStrategicMerge")
   private List<String> patchesStrategicMerge = null;
 
-  @JsonProperty("patchesJson6902")
   private List<PatchesJson6902> patchesJson6902 = null;
 
   private String reference;
 
-  public List<PatchesJson6902> getPatchesJson6902() {
-    return patchesJson6902;
-  }
-
-  public void setPatchesJson6902(List<PatchesJson6902> patchesJson6902) {
-    this.patchesJson6902 = patchesJson6902;
-  }
-
-  public List<String> getPatchesStrategicMerge() {
-    return patchesStrategicMerge;
-  }
-
-  public void setPatchesStrategicMerge(List<String> patchesStrategicMerge) {
-    this.patchesStrategicMerge = patchesStrategicMerge;
-  }
-
-  public List<Patch> getPatches() {
-    return patches;
-  }
-
-  public void setPatches(List<Patch> patches) {
-    this.patches = patches;
-  }
-
-  public List<String> getGenerators() {
-    return generators;
-  }
-
-  public void setGenerators(List<String> generators) {
-    this.generators = generators;
-  }
-
-  public List<String> getCdrs() {
-    return cdrs;
-  }
-
-  public void setCdrs(List<String> cdrs) {
-    this.cdrs = cdrs;
-  }
-
   @JsonIgnore private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-  public List<String> getResources() {
-    return resources;
+  public HashSet<String> getFilesToEvaluate(){
+    HashSet<String> toEvaluate = new HashSet<>();
+      if (this.resources != null)
+            this.resources.forEach(resource -> toEvaluate.add(resource));
+      if (this.cdrs != null)
+            this.cdrs.forEach(cdr -> toEvaluate.add(cdr));
+      if (this.generators != null)
+            this.generators.forEach(gen -> toEvaluate.add(gen));
+      if (this.patches != null)
+            this.patches.forEach(patch -> toEvaluate.add(patch.getPath()));
+      if (this.patchesStrategicMerge != null)
+            this.patchesStrategicMerge.forEach(patch -> toEvaluate.add(patch));
+      if (this.patchesJson6902 != null)
+            this.patchesJson6902.forEach(json -> toEvaluate.add(json.getPath()));
+    return toEvaluate;
   }
 
-  public void setResources(List<String> resources) {
-    this.resources = resources;
+  public HashSet<String> getFilesToDownload(Path githubPath) {
+    HashSet<String> toDownload = new HashSet<>();
+      if (this.configMapGenerator != null) {
+        this
+          .configMapGenerator
+                .forEach(
+                        conf -> {
+                          conf.getFiles()
+                                  .forEach(
+                                          file -> {
+                                            toDownload.add(githubPath.resolve(file).toString());
+                                          });
+                        });
+      }
+    return toDownload;
   }
 
-  public List<ConfigMapGenerator> getConfigMapGenerator() {
-    return configMapGenerator;
-  }
 
-  public void setConfigMapGenerator(List<ConfigMapGenerator> configMapGenerator) {
-    this.configMapGenerator = configMapGenerator;
-  }
-
-  @JsonAnyGetter
-  public Map<String, Object> getAdditionalProperties() {
-    return this.additionalProperties;
-  }
-
-  @JsonAnySetter
-  public void setAdditionalProperty(String name, Object value) {
-    this.additionalProperties.put(name, value);
-  }
-
-  public String getReference() {
-    return reference;
-  }
-
-  public void setReference(String reference) {
-    this.reference = reference;
-  }
 }

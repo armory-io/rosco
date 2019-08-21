@@ -13,7 +13,7 @@ public class BakeManifestRequest {
   TemplateRenderer templateRenderer;
   String outputName;
   String outputArtifactName;
-  List<Artifact> inputArtifacts;
+  String namespace;
   Map<String, Object> overrides;
 
   public enum TemplateRenderer {
@@ -24,7 +24,6 @@ public class BakeManifestRequest {
       if (value == null) {
         return null;
       }
-
       return Arrays.stream(values())
           .filter(v -> value.equalsIgnoreCase(v.toString()))
           .findFirst()

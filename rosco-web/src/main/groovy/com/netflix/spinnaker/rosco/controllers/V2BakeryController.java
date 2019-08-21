@@ -4,8 +4,11 @@ import com.netflix.spinnaker.kork.artifacts.model.Artifact;
 import com.netflix.spinnaker.rosco.manifests.BakeManifestService;
 import groovy.util.logging.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +19,7 @@ public class V2BakeryController {
   List<BakeManifestService> bakeManifestServices;
 
   @RequestMapping(value = "/api/v2/manifest/bake/{type}", method = RequestMethod.POST)
-  Artifact doBake(@PathVariable("type") String type,  @RequestBody Map<String, Object> request) {
+  Artifact doBake(@PathVariable("type") String type, @RequestBody Map<String, Object> request) {
     BakeManifestService service = bakeManifestServices.stream()
             .filter(s -> s.handles(type))
             .findFirst()

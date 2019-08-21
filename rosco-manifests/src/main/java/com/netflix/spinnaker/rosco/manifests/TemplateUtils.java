@@ -9,6 +9,7 @@ import com.netflix.spinnaker.rosco.services.ClouddriverService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import retrofit.client.Response;
@@ -89,9 +90,10 @@ public abstract class TemplateUtils {
     if (artifact.getReference() == null) {
       throw new InvalidRequestException("Input artifact has an empty 'reference' field.");
     }
+
     Path path =  Paths.get(
-            artifact.getReference().substring(
-                    artifact.getReference().indexOf(PATH_SEPARATOR)+PATH_SEPARATOR.length()));
+            FilenameUtils.getPath(artifact.getReference()).substring(
+                    FilenameUtils.getPath(artifact.getReference()).indexOf(PATH_SEPARATOR)+PATH_SEPARATOR.length()));
     return env.getStagingPath().resolve(path).toString();
   }
 
