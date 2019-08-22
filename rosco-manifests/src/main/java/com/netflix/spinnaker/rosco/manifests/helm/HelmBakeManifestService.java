@@ -29,7 +29,7 @@ public class HelmBakeManifestService implements BakeManifestService {
 
   @Override
   public boolean handles(String type) {
-    return type.equals("helm");
+    return type.equals("helm2");
   }
 
   public Artifact bake(Map<String, Object> request) {
