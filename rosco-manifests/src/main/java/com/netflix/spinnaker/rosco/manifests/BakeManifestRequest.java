@@ -13,7 +13,6 @@ public class BakeManifestRequest {
   TemplateRenderer templateRenderer;
   String outputName;
   String outputArtifactName;
-  String namespace;
   Map<String, Object> overrides;
 
   public enum TemplateRenderer {

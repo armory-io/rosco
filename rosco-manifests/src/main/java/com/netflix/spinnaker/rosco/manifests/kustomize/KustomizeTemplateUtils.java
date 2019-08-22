@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -60,20 +61,22 @@ public class KustomizeTemplateUtils extends TemplateUtils {
     try {
       Path path = Paths.get(FilenameUtils.getPath(artifact.getReference()));
         artifact.setReference(path.toString());
-      for (String s : getFilesFromGithub(artifact)) {
-        Artifact a = new Artifact();
-          a.setReference(s);
-          a.setArtifactAccount(artifact.getArtifactAccount());
-          a.setCustomKind(artifact.isCustomKind());
-          a.setLocation(artifact.getLocation());
-          a.setMetadata(artifact.getMetadata());
-          a.setName(artifact.getName());
-          a.setProvenance(artifact.getProvenance());
-          a.setType(artifact.getType());
-          a.setUuid(artifact.getUuid());
-          a.setVersion(artifact.getVersion());
-          artifacts.add(a);
-      }
+      HashSet<String> files = getFilesFromGithub(artifact);
+      artifacts = files.stream()
+              .map(f -> {
+                 return Artifact.builder()
+                        .reference(f)
+                        .artifactAccount(artifact.getArtifactAccount())
+                        .customKind(artifact.isCustomKind())
+                        .location(artifact.getLocation())
+                        .metadata(artifact.getMetadata())
+                        .name(artifact.getName())
+                        .provenance(artifact.getProvenance())
+                        .type(artifact.getType())
+                        .version(artifact.getVersion())
+                         .build();
+              })
+              .collect(Collectors.toList());
     } catch (IOException e) {
       log.error("Error setting references in artifacts from GitHub " + e.getMessage());
     }

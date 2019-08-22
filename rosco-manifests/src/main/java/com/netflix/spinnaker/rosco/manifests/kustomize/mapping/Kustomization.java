@@ -18,66 +18,58 @@ package com.netflix.spinnaker.rosco.manifests.kustomize.mapping;
 
 import com.fasterxml.jackson.annotation.*;
 import lombok.Data;
+
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 public class Kustomization {
 
-  private List<String> resources = null;
+    private List<String> resources = null;
 
-  private List<ConfigMapGenerator> configMapGenerator = null;
+    private List<ConfigMapGenerator> configMapGenerator = null;
 
-  private List<String> cdrs = null;
+    private List<String> cdrs = null;
 
-  private List<String> generators = null;
+    private List<String> generators = null;
 
-  private List<Patch> patches = null;
+    private List<Patch> patches = null;
 
-  private List<String> patchesStrategicMerge = null;
+    private List<String> patchesStrategicMerge = null;
 
-  private List<PatchesJson6902> patchesJson6902 = null;
+    private List<PatchesJson6902> patchesJson6902 = null;
 
-  private String reference;
+    private String reference;
 
-  @JsonIgnore private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-  public HashSet<String> getFilesToEvaluate(){
-    HashSet<String> toEvaluate = new HashSet<>();
-      if (this.resources != null)
+    public HashSet<String> getFilesToEvaluate() {
+        HashSet<String> toEvaluate = new HashSet<>();
+        if (this.resources != null)
             this.resources.forEach(resource -> toEvaluate.add(resource));
-      if (this.cdrs != null)
+        if (this.cdrs != null)
             this.cdrs.forEach(cdr -> toEvaluate.add(cdr));
-      if (this.generators != null)
+        if (this.generators != null)
             this.generators.forEach(gen -> toEvaluate.add(gen));
-      if (this.patches != null)
+        if (this.patches != null)
             this.patches.forEach(patch -> toEvaluate.add(patch.getPath()));
-      if (this.patchesStrategicMerge != null)
+        if (this.patchesStrategicMerge != null)
             this.patchesStrategicMerge.forEach(patch -> toEvaluate.add(patch));
-      if (this.patchesJson6902 != null)
+        if (this.patchesJson6902 != null)
             this.patchesJson6902.forEach(json -> toEvaluate.add(json.getPath()));
-    return toEvaluate;
-  }
+        return toEvaluate;
+    }
 
-  public HashSet<String> getFilesToDownload(Path githubPath) {
-    HashSet<String> toDownload = new HashSet<>();
-      if (this.configMapGenerator != null) {
-        this
-          .configMapGenerator
-                .forEach(
-                        conf -> {
-                          conf.getFiles()
-                                  .forEach(
-                                          file -> {
-                                            toDownload.add(githubPath.resolve(file).toString());
-                                          });
-                        });
-      }
-    return toDownload;
-  }
+    public Set<String> getFilesToDownload(Path githubPath) {
+      return this.configMapGenerator==null? new HashSet<>() :this.configMapGenerator.stream()
+        .map(configMapGenerator -> configMapGenerator.getFiles())
+        .flatMap(files -> files.stream())
+        .map(file -> githubPath.resolve(file).toString())
+        .collect(Collectors.toSet());
+    }
 
 
 }
