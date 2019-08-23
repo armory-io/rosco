@@ -75,7 +75,7 @@ public class KustomizeTemplateUtils extends TemplateUtils {
                     .build();
               }).collect(Collectors.toList());
         } catch (IOException e) {
-            log.error("Error setting references in artifacts  " + e.getMessage(),e);
+            throw new IllegalStateException("Error setting references in artifacts " + e.getMessage(), e);
         }
         try {
             for (Artifact ar : artifacts) {
@@ -107,7 +107,7 @@ public class KustomizeTemplateUtils extends TemplateUtils {
                     if (!tmp.contains("/")) {
                         filesToDownload.add(artifactPath.resolve(evaluate).toString());
                     } else {
-                        artifact.setReference(getSubFolder(evaluate, artifactPath));
+                        artifact.setReference(FilenameUtils.normalize(artifactPath.resolve(evaluate).toString()));
                         filesToDownload.addAll(getFilesFromArtifact(artifact));
                     }
                 } else {
@@ -118,21 +118,5 @@ public class KustomizeTemplateUtils extends TemplateUtils {
         }
         return filesToDownload;
     }
-
-    private String getSubFolder(String pRelativePath, Path pPath) {
-        String basePath = pPath.toString();
-        String levels = pRelativePath.substring(0, pRelativePath.lastIndexOf("/") + 1);
-        String sPath = pRelativePath.substring(pRelativePath.lastIndexOf("/") + 1);
-        if (levels.startsWith("./")) {
-            return basePath + File.separator + sPath;
-        } else {
-            int lev = levels.length() - levels.replaceAll("/", "").length();
-            for (int i = 0; i < lev; i++) {
-                basePath = basePath.substring(0, basePath.lastIndexOf("/"));
-            }
-            return basePath + File.separator + sPath;
-        }
-    }
-
 
 }
