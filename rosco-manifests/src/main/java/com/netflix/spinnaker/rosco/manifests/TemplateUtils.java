@@ -63,20 +63,18 @@ public abstract class TemplateUtils {
             throw new InvalidRequestException("Input artifact has an empty 'reference' field.");
         }
         Path artifactPath = Paths.get(artifact.getReference());
-        String filename = artifactPath.getFileName().toString();
-        String subfolder = artifactPath.toString().replace(filename, "");
-        Path tmpPath = Paths.get(env.getStagingPath().resolve(subfolder).toString());
+        Path tmpPath = Paths.get(env.getStagingPath().resolve(artifactPath.getParent()).toString());
         Files.createDirectories(tmpPath);
-        File newfile = new File(env.getStagingPath().resolve(subfolder).resolve(filename).toString());
+        File newfile = new File(env.getStagingPath().resolve(artifactPath).toString());
         newfile.createNewFile();
-        OutputStream outputStream = new FileOutputStream(newfile);
-        Response response = retrySupport.retry(() -> clouddriverService.fetchArtifact(artifact), 5, 1000, true);
-        if (response.getBody() != null) {
-            InputStream inputStream = response.getBody().in();
-            IOUtils.copy(inputStream, outputStream);
-            inputStream.close();
+        try(OutputStream outputStream = new FileOutputStream(newfile)){
+            Response response = retrySupport.retry(() -> clouddriverService.fetchArtifact(artifact), 5, 1000, true);
+            if (response.getBody() != null) {
+                try(InputStream inputStream = response.getBody().in()){
+                    IOUtils.copy(inputStream, outputStream);
+                }
+            }
         }
-        outputStream.close();
     }
 
     public static class BakeManifestEnvironment {
