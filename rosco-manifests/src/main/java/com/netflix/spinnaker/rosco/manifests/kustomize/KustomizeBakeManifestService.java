@@ -41,9 +41,11 @@ public class KustomizeBakeManifestService implements BakeManifestService {
   @Autowired
   JobExecutor jobExecutor;
 
+  private static final String KUSTOMIZE = "kustomize";
+
   @Override
   public boolean handles(String type) {
-    return type.equals("kustomize");
+    return type.equals(KUSTOMIZE);
   }
 
   public Artifact bake(Map<String, Object> request) {

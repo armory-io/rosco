@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -39,32 +41,25 @@ public class KustomizationFileReader {
 
   @Autowired
   ClouddriverService clouddriverService;
-  private static final String KUSTOMIZATION_FILE = "kustomization";
+  private List<String> KUSTOMIZATION_FILENAMES = Arrays.asList("kustomization.yaml","kustomization.yml","kustomization");
   private RetrySupport retrySupport = new RetrySupport();
 
   public Kustomization getKustomization(Artifact artifact) throws IOException {
     Path artifactPath = Paths.get(artifact.getReference());
-    artifact.setReference(artifactPath.resolve(KUSTOMIZATION_FILE + ".yaml").toString());
     Kustomization kustomization = null;
-    try {
-      kustomization = convert(artifact);
-    }catch(Exception eyaml){
-        try{
-          artifact.setReference(artifactPath.resolve(KUSTOMIZATION_FILE + ".yml").toString());
-          kustomization = convert(artifact);
-        }catch(Exception eyml){
-          try{
-            artifact.setReference(artifactPath.resolve(KUSTOMIZATION_FILE).toString());
-            kustomization = convert(artifact);
-          }catch(Exception e){
-            throw new IOException("Unable to convert kustomization file to Object.");
-          }
-        }
+    for (String filename : KUSTOMIZATION_FILENAMES) {
+      try {
+        artifact.setReference(artifactPath.resolve(filename).toString());
+        kustomization = convert(artifact);
+        kustomization.setReference(artifact.getReference());
+        break;
+      } catch (IOException io) {
+        log.error("Unable to convert kustomization file to Object: " + filename);
+      }
     }
-    if(kustomization!=null)
-      kustomization.setReference(artifact.getReference());
     return kustomization;
   }
+
 
   private Kustomization convert(Artifact artifact) throws IOException {
     ObjectMapper objectMapper = new ObjectMapper();

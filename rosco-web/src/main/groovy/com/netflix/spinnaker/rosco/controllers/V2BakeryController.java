@@ -23,12 +23,7 @@ public class V2BakeryController {
     BakeManifestService service = bakeManifestServices.stream()
             .filter(s -> s.handles(type))
             .findFirst()
-            .orElse(null);
-
-    if (service == null) {
-      throw new IllegalArgumentException("Cannot bake manifest with template renderer type: " + type);
-    }
-
+            .orElseThrow(() -> new IllegalArgumentException("Cannot bake manifest with template renderer type: " + type));
     return service.bake(request);
   }
 }

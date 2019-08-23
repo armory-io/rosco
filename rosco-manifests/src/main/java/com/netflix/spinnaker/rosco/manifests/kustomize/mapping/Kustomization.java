@@ -31,7 +31,7 @@ public class Kustomization {
 
     private List<ConfigMapGenerator> configMapGenerator = null;
 
-    private List<String> cdrs = null;
+    private List<String> crds = null;
 
     private List<String> generators = null;
 
@@ -50,8 +50,8 @@ public class Kustomization {
         HashSet<String> toEvaluate = new HashSet<>();
         if (this.resources != null)
             this.resources.forEach(resource -> toEvaluate.add(resource));
-        if (this.cdrs != null)
-            this.cdrs.forEach(cdr -> toEvaluate.add(cdr));
+        if (this.crds != null)
+            this.crds.forEach(crd -> toEvaluate.add(crd));
         if (this.generators != null)
             this.generators.forEach(gen -> toEvaluate.add(gen));
         if (this.patches != null)

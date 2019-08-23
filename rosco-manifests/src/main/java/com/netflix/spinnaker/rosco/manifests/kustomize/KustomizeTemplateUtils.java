@@ -39,15 +39,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class KustomizeTemplateUtils extends TemplateUtils {
 
-    private HashSet<String> filesToDownload = new HashSet<String>();
-
     @Autowired
     private KustomizationFileReader kustomizationFileReader;
 
     public BakeRecipe buildBakeRecipe(BakeManifestEnvironment env, KustomizeBakeManifestRequest request) {
         BakeRecipe result = new BakeRecipe();
         result.setName(request.getOutputName());
-        filesToDownload = new HashSet<>();
         Artifact artifact = request.getInputArtifact();
         if (artifact == null) {
             throw new IllegalArgumentException("At least one input artifact must be provided to bake");
@@ -78,7 +75,7 @@ public class KustomizeTemplateUtils extends TemplateUtils {
                     .build();
               }).collect(Collectors.toList());
         } catch (IOException e) {
-            log.error("Error setting references in artifacts  " + e.getMessage());
+            log.error("Error setting references in artifacts  " + e.getMessage(),e);
         }
         try {
             for (Artifact ar : artifacts) {
@@ -98,6 +95,7 @@ public class KustomizeTemplateUtils extends TemplateUtils {
     }
 
     private HashSet<String> getFilesFromArtifact(Artifact artifact) throws IOException {
+        HashSet<String> filesToDownload = new HashSet<>();
         Path artifactPath = Paths.get(artifact.getReference());
         Kustomization kustomization = kustomizationFileReader.getKustomization(artifact);
         filesToDownload.add(kustomization.getReference());
@@ -110,11 +108,11 @@ public class KustomizeTemplateUtils extends TemplateUtils {
                         filesToDownload.add(artifactPath.resolve(evaluate).toString());
                     } else {
                         artifact.setReference(getSubFolder(evaluate, artifactPath));
-                        getFilesFromArtifact(artifact);
+                        filesToDownload.addAll(getFilesFromArtifact(artifact));
                     }
                 } else {
-                    artifact.setReference(getSubFolder(evaluate, artifactPath));
-                    getFilesFromArtifact(artifact);
+                    artifact.setReference(artifactPath.resolve(evaluate).toString());
+                    filesToDownload.addAll(getFilesFromArtifact(artifact));
                 }
             }
         }
