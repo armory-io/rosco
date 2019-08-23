@@ -20,14 +20,14 @@ RUN wget https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get &&
   ./get && \
   rm get
 
-RUN opsys=linux curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/18896544 |\
+RUN curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/18896544 |\
   grep browser_download |\
-  grep $opsys |\
+  grep linux |\
   cut -d '"' -f 4 |\
   xargs curl -O -L && \
   mkdir kustomize && \
-  mv kustomize_*_${opsys}_amd64 kustomize/kustomize && \
-  chmod u+x kustomize/kustomize
+  mv kustomize_*_linux_amd64 kustomize/kustomize && \
+  chmod +x kustomize/kustomize
 
 ENV PATH "/packer:$PATH"
 ENV PATH "kustomize:$PATH"

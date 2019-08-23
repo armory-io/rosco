@@ -50,7 +50,7 @@ public class KustomizationFileReader {
       kustomization = convert(artifact);
     }catch(Exception eyaml){
         try{
-          artifact.setReference(artifactPath.resolve(KUSTOMIZATION_FILE + ".yal").toString());
+          artifact.setReference(artifactPath.resolve(KUSTOMIZATION_FILE + ".yml").toString());
           kustomization = convert(artifact);
         }catch(Exception eyml){
           try{
