@@ -1,0 +1,48 @@
+rosco-web/src/main/java/com/netflix/spinnaker/config/WebConfigOverrides.java
+  human 28,33-41
+  human 1-43
+---
+{
+  "attestations": [
+    {
+      "entries": [
+        {
+          "accepted_lines": 10,
+          "added_lines": 10,
+          "deleted_lines": 0,
+          "hash": "human",
+          "lines": "28,33-41",
+          "overridden_lines": 0
+        },
+        {
+          "accepted_lines": 33,
+          "added_lines": 0,
+          "deleted_lines": 10,
+          "hash": "human",
+          "lines": "1-43",
+          "overridden_lines": 0
+        }
+      ],
+      "file": "rosco-web/src/main/java/com/netflix/spinnaker/config/WebConfigOverrides.java"
+    }
+  ],
+  "base_commit_sha": "a9a0735fd4329241a67ce6c26dd745089f3a8c7c",
+  "branch": "fixcve-2026-22732",
+  "commit_sha": "6a7023e70048508c5fcf2f8dd39c3df8ec8af09e",
+  "commit_time": "2026-05-07T16:48:30-05:00",
+  "commit_type": "direct_commit",
+  "git_ai_version": "1.4.2",
+  "prompts": {
+    "human": {
+      "accepted_lines": 10,
+      "agent_id": null,
+      "human_author": "Jason McIntosh <jason.mcintosh@harness.io>",
+      "messages": [],
+      "overriden_lines": 0,
+      "total_additions": 10,
+      "total_deletions": 0
+    }
+  },
+  "repo": "git@github.com:armory-io/rosco.git",
+  "schema_version": "authorship/3.0.0"
+}
